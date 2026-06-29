@@ -39,7 +39,7 @@ export default function App() {
   // Main state
   const [matches, setMatches] = useState<Match[]>(() => {
     // Attempt local storage load
-    const saved = localStorage.getItem("wc_predictions");
+    const saved = localStorage.getItem("wc_predictions_v2");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -73,7 +73,7 @@ export default function App() {
 
   // Save predictions to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("wc_predictions", JSON.stringify(matches));
+    localStorage.setItem("wc_predictions_v2", JSON.stringify(matches));
   }, [matches]);
 
   // Audio synthesis feedback
@@ -226,24 +226,26 @@ export default function App() {
 
     setMatches(updated);
 
-    // Auto advance wizard to the next available match
-    const nextId = findNextMatchToPredict(updated);
-    if (nextId) {
-      setActiveMatchId(nextId);
-    } else {
-      // If final is predicted, play grand victory music!
-      const finalMatch = updated.find(m => m.id === "F31");
-      if (finalMatch && finalMatch.winnerId) {
-        playSound("fanfare");
+    // Auto advance wizard to the next available match after a short delay for visual feedback
+    setTimeout(() => {
+      const nextId = findNextMatchToPredict(updated);
+      if (nextId) {
+        setActiveMatchId(nextId);
+      } else {
+        // If final is predicted, play grand victory music!
+        const finalMatch = updated.find(m => m.id === "F31");
+        if (finalMatch && finalMatch.winnerId) {
+          playSound("fanfare");
+        }
       }
-    }
+    }, 800);
   };
 
   // Reset all predictions
   const handleReset = () => {
     if (confirm("Tüm tahminlerinizi sıfırlamak istediğinize emin misiniz?")) {
       playSound("reset");
-      localStorage.removeItem("wc_predictions");
+      localStorage.removeItem("wc_predictions_v2");
       setMatches(getCleanInitialMatches());
       setActiveMatchId("L1");
       setActiveTab("predictor");
