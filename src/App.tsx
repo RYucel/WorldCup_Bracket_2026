@@ -31,6 +31,8 @@ import {
   Share2
 } from "lucide-react";
 
+import VisitorCounter from "./components/VisitorCounter";
+
 const getCleanInitialMatches = (): Match[] => {
   return INITIAL_MATCHES.map(m => ({ ...m }));
 };
@@ -1077,9 +1079,12 @@ export default function App() {
             <span className="w-2.5 h-2.5 border-2 border-white/20 rounded-full"></span> BEKLEYEN MAÇLAR
           </span>
         </div>
-        <p className="text-[10px] text-slate-400 font-mono tracking-widest font-bold uppercase">
-          © 2026 FIFA WORLD CUP PREDICTOR TOOL
-        </p>
+        <div className="flex items-center gap-4">
+          <VisitorCounter />
+          <p className="text-[10px] text-slate-400 font-mono tracking-widest font-bold uppercase">
+            © 2026 FIFA WORLD CUP PREDICTOR TOOL
+          </p>
+        </div>
       </footer>
 
     </div>
