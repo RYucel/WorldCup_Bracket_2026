@@ -1,0 +1,6 @@
+{
+  "name": "Dünya Kupası Son 32 Tahmin Oyunu",
+  "description": "Dünya Kupası son 32 eşleşmelerinden itibaren takımları seçerek şampiyonu belirlediğiniz interaktif ve animasyonlu braket tahmin oyunu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
