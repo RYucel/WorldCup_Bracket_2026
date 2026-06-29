@@ -42,7 +42,22 @@ export default function App() {
     const saved = localStorage.getItem("wc_predictions");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Merge with initial matches to enforce locked match updates
+        return getCleanInitialMatches().map(initialMatch => {
+          if (initialMatch.isLocked) return initialMatch;
+          
+          const savedMatch = parsed.find((m: Match) => m.id === initialMatch.id);
+          if (savedMatch) {
+             return {
+               ...initialMatch,
+               winnerId: savedMatch.winnerId,
+               score1: savedMatch.score1,
+               score2: savedMatch.score2
+             };
+          }
+          return initialMatch;
+        });
       } catch (e) {
         return getCleanInitialMatches();
       }
@@ -162,6 +177,9 @@ export default function App() {
 
   // Select match winner and propagate to subsequent match slots
   const selectWinner = (matchId: string, winnerId: string) => {
+    const originalMatch = matches.find(x => x.id === matchId);
+    if (originalMatch?.isLocked) return;
+
     playSound("success");
 
     let updated = matches.map(m => {
@@ -202,7 +220,6 @@ export default function App() {
       }
     };
 
-    const originalMatch = matches.find(x => x.id === matchId);
     if (originalMatch && originalMatch.nextMatchId) {
       triggerCascadeReset(matchId, originalMatch.winnerId);
     }
@@ -226,6 +243,7 @@ export default function App() {
   const handleReset = () => {
     if (confirm("Tüm tahminlerinizi sıfırlamak istediğinize emin misiniz?")) {
       playSound("reset");
+      localStorage.removeItem("wc_predictions");
       setMatches(getCleanInitialMatches());
       setActiveMatchId("L1");
       setActiveTab("predictor");
@@ -254,9 +272,9 @@ export default function App() {
           const t1 = TEAMS[match.team1Id];
           const t2 = TEAMS[match.team2Id];
 
-          // Calculate winner probability based on overall rating
-          const totalRating = t1.rating.overall + t2.rating.overall;
-          const baseProb = t1.rating.overall / totalRating; // e.g. 88 / (88+75) = 54%
+          // Calculate winner probability based on Elo rating
+          const eloDiff = t2.rating.overall - t1.rating.overall;
+          const baseProb = 1 / (1 + Math.pow(10, eloDiff / 400)); // Elo probability formula
 
           // Exaggerate probability slightly for realism, adding standard deviation
           const t1Chance = baseProb + 0.1 * (baseProb - 0.5);
@@ -351,7 +369,7 @@ export default function App() {
       text = `Süper Bilgisayar analizi bu maçı %50-%50 kafa kafaya görüyor. ${team1.name} ekibinin kreatif orta sahası (${team1.rating.midfield}) ile ${team2.name} ekibinin dinamik orta saha hattı (${team2.rating.midfield}) arasında müthiş bir taktik savaş yaşanacaktır. Karar tamamen sizde!`;
     } else {
       const chance = Math.round(55 + Math.min(Math.abs(diff) * 3, 35));
-      text = `İstatistiksel modellemelere göre ${favorite.name} ekibi %${chance} ihtimalle turun net favorisi. ${favorite.name} kadrosundaki ${favorite.keyPlayer}, rakipleri ${underdog.name} savunmasını (${underdog.rating.defense}) sarsabilecek kalitede. Ancak Dünya Kupası sürprizlerle doludur!`;
+      text = `Yapay zeka analizine göre ${favorite.name} %${chance} ihtimalle kağıt üzerinde daha güçlü görünüyor. Ancak seçimi tamamen siz yapacaksınız. Dünya Kupası sürprizlerle doludur, favorinizi aşağıdan belirleyin!`;
     }
     return text;
   };
@@ -596,6 +614,7 @@ export default function App() {
                         <TeamCard
                           team={team1}
                           isSelected={activeMatch.winnerId === team1.id}
+                          isLocked={activeMatch.isLocked}
                           variant="voting"
                           onClick={() => selectWinner(activeMatch.id, team1.id)}
                         />
@@ -604,48 +623,11 @@ export default function App() {
                         <TeamCard
                           team={team2}
                           isSelected={activeMatch.winnerId === team2.id}
+                          isLocked={activeMatch.isLocked}
                           variant="voting"
                           onClick={() => selectWinner(activeMatch.id, team2.id)}
                         />
                       </div>
-
-                      {/* Optional Score Input */}
-                      {activeMatch.winnerId && (
-                        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-3">
-                          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Gerçek Maç Skoru (Opsiyonel)</span>
-                          <div className="flex items-center gap-6">
-                            <div className="flex flex-col items-center gap-1.5">
-                              <span className="text-[10px] font-black text-slate-300 uppercase truncate w-20 text-center italic">{team1.code}</span>
-                              <input 
-                                type="number" 
-                                min="0"
-                                max="20"
-                                value={activeMatch.score1 ?? ''}
-                                onChange={(e) => {
-                                  const val = e.target.value ? parseInt(e.target.value) : null;
-                                  setMatches(prev => prev.map(m => m.id === activeMatchId ? { ...m, score1: val } : m));
-                                }}
-                                className="w-16 h-12 bg-slate-950 border border-white/20 rounded-sm text-center text-lg font-mono font-black text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/50"
-                              />
-                            </div>
-                            <span className="text-slate-600 font-bold text-xl">-</span>
-                            <div className="flex flex-col items-center gap-1.5">
-                              <span className="text-[10px] font-black text-slate-300 uppercase truncate w-20 text-center italic">{team2.code}</span>
-                              <input 
-                                type="number" 
-                                min="0"
-                                max="20"
-                                value={activeMatch.score2 ?? ''}
-                                onChange={(e) => {
-                                  const val = e.target.value ? parseInt(e.target.value) : null;
-                                  setMatches(prev => prev.map(m => m.id === activeMatchId ? { ...m, score2: val } : m));
-                                }}
-                                className="w-16 h-12 bg-slate-950 border border-white/20 rounded-sm text-center text-lg font-mono font-black text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/50"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </>
                   ) : (
                     <div className="py-16 text-center flex flex-col items-center justify-center space-y-4">
@@ -798,7 +780,7 @@ export default function App() {
 
               {/* Flex Columns Structure */}
               <div
-                className="flex items-center justify-between gap-4 md:gap-8 min-w-[1200px] md:min-w-max h-[780px]"
+                className="flex items-center justify-between gap-1 md:gap-2 lg:gap-3 w-full h-[780px]"
                 style={{
                   // On mobile, hide non-selected segments to fit the layout perfectly
                   justifyContent: "space-between"

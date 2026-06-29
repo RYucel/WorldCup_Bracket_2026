@@ -28,7 +28,7 @@ export default function BracketNode({ match, team1, team2, isActive, onSelect }:
     <button
       id={`bracket-node-${match.id}`}
       onClick={onSelect}
-      className={`group relative text-left w-48 rounded-sm border transition-all duration-300 focus:outline-none ${
+      className={`group relative text-left w-24 md:w-28 xl:w-32 rounded-sm border transition-all duration-300 focus:outline-none ${
         isActive
           ? "border-yellow-500 bg-blue-950/50 ring-1 ring-yellow-500/30 scale-[1.03] shadow-[0_0_20px_rgba(234,179,8,0.25)] z-10"
           : "border-white/10 bg-white/5 hover:border-yellow-500/40 hover:scale-[1.01] hover:shadow-md hover:bg-blue-900/20"

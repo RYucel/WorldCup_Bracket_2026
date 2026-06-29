@@ -11,11 +11,12 @@ interface TeamCardProps {
   key?: React.Key;
   team: Team;
   isSelected?: boolean;
+  isLocked?: boolean;
   onClick?: () => void;
   variant?: "compact" | "detailed" | "voting";
 }
 
-export default function TeamCard({ team, isSelected = false, onClick, variant = "detailed" }: TeamCardProps) {
+export default function TeamCard({ team, isSelected = false, isLocked = false, onClick, variant = "detailed" }: TeamCardProps) {
   const flagUrl = `https://flagcdn.com/w160/${team.flagCode}.png`;
 
   if (variant === "voting") {
@@ -23,10 +24,11 @@ export default function TeamCard({ team, isSelected = false, onClick, variant = 
       <button
         id={`team-voting-card-${team.id}`}
         onClick={onClick}
-        className={`relative w-full text-left overflow-hidden rounded-sm border-2 p-6 transition-all duration-300 transform active:scale-[0.98] focus:outline-none ${
+        disabled={isLocked}
+        className={`relative w-full text-left overflow-hidden rounded-sm border-2 p-6 transition-all duration-300 transform ${!isLocked ? "active:scale-[0.98]" : ""} focus:outline-none ${
           isSelected
             ? "border-yellow-500 bg-blue-950/40 shadow-[0_0_20px_rgba(234,179,8,0.25)] scale-[1.01]"
-            : "border-white/10 bg-white/5 hover:border-yellow-500/50 hover:bg-blue-900/20 hover:scale-[1.01]"
+            : `border-white/10 bg-white/5 ${!isLocked ? "hover:border-yellow-500/50 hover:bg-blue-900/20 hover:scale-[1.01]" : "opacity-60 grayscale-[50%]"}`
         }`}
       >
         {/* Color Accent Bar */}
@@ -56,6 +58,9 @@ export default function TeamCard({ team, isSelected = false, onClick, variant = 
             <h3 className="font-display text-2xl font-bold text-white tracking-tight mt-0.5">
               {team.name}
             </h3>
+            <div className="mt-1 text-[10px] font-mono font-bold tracking-widest text-slate-400 uppercase bg-slate-900/50 inline-block px-2 py-0.5 rounded border border-slate-800">
+              ELO: <span className="text-yellow-400">{team.rating.overall}</span>
+            </div>
           </div>
 
           {/* Stars */}
@@ -142,12 +147,14 @@ export default function TeamCard({ team, isSelected = false, onClick, variant = 
           <div
             className={`w-full py-2.5 rounded-sm font-bold text-xs uppercase italic transform skew-x-[-10deg] transition-all text-center ${
               isSelected
-                ? "bg-yellow-500 text-slate-950 font-black shadow-[0_0_15px_rgba(234,179,8,0.4)]"
-                : "bg-white/10 text-slate-200 hover:bg-white/20"
+                ? isLocked ? "bg-yellow-500 text-slate-950 font-black" : "bg-yellow-500 text-slate-950 font-black shadow-[0_0_15px_rgba(234,179,8,0.4)]"
+                : isLocked ? "bg-white/5 text-slate-500" : "bg-white/10 text-slate-200 hover:bg-yellow-500/20 hover:text-yellow-400"
             }`}
           >
             <span className="inline-block transform skew-x-[10deg]">
-              {isSelected ? "FAVORİN SEÇİLDİ!" : "TURU GEÇER DE"}
+              {isLocked 
+                ? (isSelected ? "TUR ATLADI" : "ELENDİ")
+                : (isSelected ? "SEÇİLDİ" : "BUNU SEÇ")}
             </span>
           </div>
         </div>
@@ -172,6 +179,9 @@ export default function TeamCard({ team, isSelected = false, onClick, variant = 
           <div className="flex items-center space-x-2">
             <span className="font-mono text-[10px] text-yellow-500 tracking-wider font-semibold">
               {team.id}
+            </span>
+            <span className="font-mono text-[9px] px-1 bg-yellow-500/20 text-yellow-300 rounded border border-yellow-500/30">
+              ELO: {team.rating.overall}
             </span>
             <div className="flex">
               {Array.from({ length: 5 }).map((_, i) => (
