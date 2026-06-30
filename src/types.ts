@@ -440,7 +440,7 @@ export const INITIAL_MATCHES: Match[] = [
     team2Id: "FAS",
     winnerId: "FAS",
     score1: 1,
-    score2: 1,
+    score2: 3,
     isLocked: true,
     stage: "son32",
     nextMatchId: "L18",
