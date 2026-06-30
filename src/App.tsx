@@ -37,11 +37,25 @@ const getCleanInitialMatches = (): Match[] => {
   return INITIAL_MATCHES.map(m => ({ ...m }));
 };
 
+const getFirstPlayableMatchId = (matchesList: Match[]): string => {
+  const stages = ["son32", "son16", "ceyrek", "yarifinal", "final"];
+  for (const stage of stages) {
+    const stageMatches = matchesList.filter(m => m.stage === stage);
+    const unpredicted = stageMatches.find(
+      m => m.team1Id !== null && m.team2Id !== null && m.winnerId === null && !m.isLocked
+    );
+    if (unpredicted) {
+      return unpredicted.id;
+    }
+  }
+  return "L1";
+};
+
 export default function App() {
   // Main state
   const [matches, setMatches] = useState<Match[]>(() => {
     // Attempt local storage load
-    const saved = localStorage.getItem("wc_predictions_v3");
+    const saved = localStorage.getItem("wc_predictions_v4");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -67,7 +81,7 @@ export default function App() {
     return getCleanInitialMatches();
   });
 
-  const [activeMatchId, setActiveMatchId] = useState<string>("L1");
+  const [activeMatchId, setActiveMatchId] = useState<string>(() => getFirstPlayableMatchId(matches));
   const [activeTab, setActiveTab] = useState<"predictor" | "bracket" | "teams">("predictor");
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [bracketViewSegment, setBracketViewSegment] = useState<"left" | "center" | "right">("center");
@@ -75,7 +89,7 @@ export default function App() {
 
   // Save predictions to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("wc_predictions_v3", JSON.stringify(matches));
+    localStorage.setItem("wc_predictions_v4", JSON.stringify(matches));
   }, [matches]);
 
   // Audio synthesis feedback
@@ -247,9 +261,10 @@ export default function App() {
   const handleReset = () => {
     if (confirm("Tüm tahminlerinizi sıfırlamak istediğinize emin misiniz?")) {
       playSound("reset");
-      localStorage.removeItem("wc_predictions_v3");
-      setMatches(getCleanInitialMatches());
-      setActiveMatchId("L1");
+      localStorage.removeItem("wc_predictions_v4");
+      const cleanMatches = getCleanInitialMatches();
+      setMatches(cleanMatches);
+      setActiveMatchId(getFirstPlayableMatchId(cleanMatches));
       setActiveTab("predictor");
     }
   };
