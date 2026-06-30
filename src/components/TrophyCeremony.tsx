@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { Team, Match } from "../types";
+import { Team, Match, TEAMS } from "../types";
 import { Trophy, Share2, RotateCcw, Flame, Sparkles, Award, Star, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -56,14 +56,35 @@ export default function TrophyCeremony({ winner, matches, onRestart, onViewBrack
   const [copied, setCopied] = useState(false);
 
   const copyRecapText = () => {
-    const recap = sortedPath.map(m => {
-      const opp = getOpponentName(m, winner.id);
-      return `${getStageTurkish(m.stage)}: ${winner.name} vs ${opp}`;
-    }).join("\n");
-    
-    const textToCopy = `🏆 2026 DÜNYA KUPASI ŞAMPİYONUM: ${winner.name}! 🏆\n\nŞampiyonluk Yolculuğu:\n${recap}\n\nSen de kendi braketini oluştur ve şampiyonunu bul!`;
-    
-    navigator.clipboard.writeText(textToCopy);
+    let text = "🏆 2026 FIFA Dünya Kupası Tahminlerim 🏆\n\n";
+
+    const stages = [
+      { id: "son32", name: "Son 32 Turu" },
+      { id: "son16", name: "Son 16 Turu" },
+      { id: "ceyrek", name: "Çeyrek Final" },
+      { id: "yarifinal", name: "Yarı Final" },
+      { id: "final", name: "Final" }
+    ];
+
+    stages.forEach(({ id, name }) => {
+      const stageMatches = matches.filter(m => m.stage === id);
+      text += `--- ${name} ---\n`;
+      stageMatches.forEach(m => {
+        if (m.team1Id && m.team2Id && m.winnerId) {
+          const t1 = TEAMS[m.team1Id].name;
+          const t2 = TEAMS[m.team2Id].name;
+          const w = TEAMS[m.winnerId].name;
+          text += `${t1} vs ${t2} 👉 ${w}\n`;
+        }
+      });
+      text += "\n";
+    });
+
+    text += `👑 Şampiyon: ${winner.name} 👑\n\n`;
+    text += "Hedef: Bushmills Viski! 🥃\n";
+    text += "https://wcpredictor2026.vercel.app/";
+
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
