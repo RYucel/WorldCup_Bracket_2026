@@ -55,7 +55,7 @@ export default function App() {
   // Main state
   const [matches, setMatches] = useState<Match[]>(() => {
     // Attempt local storage load
-    const saved = localStorage.getItem("wc_predictions_v4");
+    const saved = localStorage.getItem("wc_predictions_v5");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -89,7 +89,7 @@ export default function App() {
 
   // Save predictions to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("wc_predictions_v4", JSON.stringify(matches));
+    localStorage.setItem("wc_predictions_v5", JSON.stringify(matches));
   }, [matches]);
 
   // Audio synthesis feedback
@@ -261,7 +261,7 @@ export default function App() {
   const handleReset = () => {
     if (confirm("Tüm tahminlerinizi sıfırlamak istediğinize emin misiniz?")) {
       playSound("reset");
-      localStorage.removeItem("wc_predictions_v4");
+      localStorage.removeItem("wc_predictions_v5");
       const cleanMatches = getCleanInitialMatches();
       setMatches(cleanMatches);
       setActiveMatchId(getFirstPlayableMatchId(cleanMatches));
